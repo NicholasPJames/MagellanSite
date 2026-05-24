@@ -354,8 +354,7 @@
     <div class="login-box">
         <h1>MAGELLAN</h1>
         <hr>
-        <input type="email" id="emailInput" placeholder="Email">
-        <input type="password" id="passwordInput" placeholder="Password">
+        <input type="password" id="passwordInput" placeholder="Password" autofocus>
         <br>
         <button onclick="attemptLogin()">ENTER</button>
         <div class="login-error" id="loginError"></div>
@@ -429,23 +428,26 @@
 <script>
     // ── Supabase Client ──
     const SUPABASE_URL = 'https://kubesclsvkhygfltvywy.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_60vLl1aJo1TckrEQKWEfuQ_YqYtafjW';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1YmVzY2xzdmtoeWdmbHR2eXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1ODI3NjUsImV4cCI6MjA5NTE1ODc2NX0.pMVdYZpuuMsAZYD5b-QYXv7WCO_TOrb1iYv2P1obnvw';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // ── Auth ──
+    // The email tied to the shared LP account in Supabase
+    const LP_EMAIL = 'nikkojamesjr@icloud.com';
+
     async function attemptLogin() {
-        const email = document.getElementById('emailInput').value.trim();
+        const email = LP_EMAIL;
         const password = document.getElementById('passwordInput').value;
         const errorEl = document.getElementById('loginError');
 
-        if (!email || !password) {
-            errorEl.textContent = 'Please enter email and password.';
+        if (!password) {
+            errorEl.textContent = 'Please enter a password.';
             return;
         }
 
         errorEl.textContent = 'Signing in...';
 
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await sb.auth.signInWithPassword({
             email: email,
             password: password
         });
@@ -458,11 +460,10 @@
     }
 
     async function logout() {
-        await supabase.auth.signOut();
+        await sb.auth.signOut();
         document.getElementById('portal').style.display = 'none';
         document.getElementById('loginOverlay').style.display = 'flex';
         document.getElementById('passwordInput').value = '';
-        document.getElementById('emailInput').value = '';
         document.getElementById('loginError').textContent = '';
     }
 
@@ -474,7 +475,7 @@
 
     // Check existing session on load
     async function checkSession() {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await sb.auth.getSession();
         if (session) {
             showPortal();
         }
@@ -485,15 +486,12 @@
     document.getElementById('passwordInput').addEventListener('keydown', function(e) {
         if (e.key === 'Enter') attemptLogin();
     });
-    document.getElementById('emailInput').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') document.getElementById('passwordInput').focus();
-    });
 
     // ── Deals ──
     let dealsCache = [];
 
     async function loadDeals() {
-        const { data: deals, error } = await supabase
+        const { data: deals, error } = await sb
             .from('deals')
             .select('*')
             .order('created_at', { ascending: false });
@@ -505,7 +503,7 @@
         }
 
         // Load comments for all deals
-        const { data: comments } = await supabase
+        const { data: comments } = await sb
             .from('comments')
             .select('*')
             .order('created_at', { ascending: true });
@@ -545,7 +543,7 @@
             status: 'new'
         };
 
-        const { error } = await supabase.from('deals').insert([deal]);
+        const { error } = await sb.from('deals').insert([deal]);
 
         if (error) {
             alert('Error submitting deal. Please try again.');
@@ -570,7 +568,7 @@
         if (!deal) return;
         const newStatus = deal.status === 'new' ? 'seen' : 'new';
 
-        const { error } = await supabase
+        const { error } = await sb
             .from('deals')
             .update({ status: newStatus })
             .eq('id', dealId);
@@ -584,7 +582,7 @@
     async function deleteDeal(dealId) {
         if (!confirm('Remove this deal?')) return;
 
-        const { error } = await supabase
+        const { error } = await sb
             .from('deals')
             .delete()
             .eq('id', dealId);
@@ -606,7 +604,7 @@
         const text = textEl.value.trim();
         if (!text) return;
 
-        const { error } = await supabase
+        const { error } = await sb
             .from('comments')
             .insert([{ deal_id: dealId, author: author, text: text }]);
 
