@@ -333,6 +333,20 @@
             outline: none;
             border-color: #2e5e4e;
         }
+        .reply-btn {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 11px;
+            color: #2e5e4e;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 2px 0;
+            text-decoration: underline;
+        }
+        .reply-form {
+            margin-top: 6px;
+            margin-bottom: 6px;
+        }
         .no-deals {
             text-align: center;
             color: #999;
@@ -563,22 +577,6 @@
         await loadDeals();
     }
 
-    async function toggleStatus(dealId) {
-        const deal = dealsCache.find(d => d.id === dealId);
-        if (!deal) return;
-        const newStatus = deal.status === 'new' ? 'seen' : 'new';
-
-        const { error } = await sb
-            .from('deals')
-            .update({ status: newStatus })
-            .eq('id', dealId);
-
-        if (!error) {
-            deal.status = newStatus;
-            renderDeals();
-        }
-    }
-
     async function deleteDeal(dealId) {
         if (!confirm('Remove this deal?')) return;
 
@@ -597,16 +595,20 @@
         el.style.display = el.style.display === 'block' ? 'none' : 'block';
     }
 
-    async function addComment(dealId) {
-        const authorEl = document.getElementById('comment-author-' + dealId);
-        const textEl = document.getElementById('comment-text-' + dealId);
+    async function addComment(dealId, parentId) {
+        const suffix = parentId ? parentId : dealId;
+        const authorEl = document.getElementById('comment-author-' + suffix);
+        const textEl = document.getElementById('comment-text-' + suffix);
         const author = authorEl.value.trim() || 'Anonymous';
         const text = textEl.value.trim();
         if (!text) return;
 
+        const row = { deal_id: dealId, author: author, text: text };
+        if (parentId) row.parent_id = parentId;
+
         const { error } = await sb
             .from('comments')
-            .insert([{ deal_id: dealId, author: author, text: text }]);
+            .insert([row]);
 
         if (!error) {
             authorEl.value = '';
@@ -618,6 +620,41 @@
                 if (el) el.style.display = 'block';
             }, 100);
         }
+    }
+
+    function toggleReplyForm(commentId) {
+        const el = document.getElementById('reply-form-' + commentId);
+        el.style.display = el.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function renderCommentTree(comments, allComments, dealId, depth) {
+        let html = '';
+        comments.forEach(c => {
+            const indent = depth * 20;
+            html += '<div class="comment" style="margin-left:' + indent + 'px;">';
+            html += '<span class="comment-author">' + escapeHtml(c.author) + '</span>';
+            html += '<span class="comment-date">' + formatShortDate(c.created_at) + '</span>';
+            html += '<div class="comment-text">' + escapeHtml(c.text) + '</div>';
+            html += '<button class="reply-btn" onclick="toggleReplyForm(' + c.id + ')">Reply</button>';
+
+            // Reply form (hidden by default)
+            html += '<div class="reply-form" id="reply-form-' + c.id + '" style="display:none;">';
+            html += '<div class="comment-form">';
+            html += '<input type="text" id="comment-author-' + c.id + '" placeholder="Name">';
+            html += '<textarea id="comment-text-' + c.id + '" placeholder="Reply..."></textarea>';
+            html += '<button class="btn btn-small" onclick="addComment(' + dealId + ', ' + c.id + ')">Post</button>';
+            html += '</div>';
+            html += '</div>';
+
+            // Render children
+            const children = allComments.filter(ch => ch.parent_id === c.id);
+            if (children.length > 0) {
+                html += renderCommentTree(children, allComments, dealId, depth + 1);
+            }
+
+            html += '</div>';
+        });
+        return html;
     }
 
     function formatUrl(url) {
@@ -653,15 +690,10 @@
 
         let html = '';
         dealsCache.forEach(deal => {
-            const statusClass = deal.status === 'new' ? 'status-new' : 'status-seen';
-            const statusLabel = deal.status === 'new' ? 'New' : 'Reviewed';
             const commentCount = deal.comments ? deal.comments.length : 0;
 
             html += '<div class="deal-card">';
-            html += '<div class="deal-header">';
             html += '<h3 class="deal-name">' + escapeHtml(deal.name) + '</h3>';
-            html += '<span class="deal-status ' + statusClass + '" onclick="toggleStatus(' + deal.id + ')" title="Click to toggle">' + statusLabel + '</span>';
-            html += '</div>';
 
             if (deal.description) {
                 html += '<div class="deal-description">' + escapeHtml(deal.description) + '</div>';
@@ -702,20 +734,15 @@
             html += '<button class="comments-toggle" onclick="toggleComments(' + deal.id + ')">Comments (' + commentCount + ')</button>';
             html += '<div class="comments-body" id="comments-' + deal.id + '">';
 
-            if (deal.comments && deal.comments.length > 0) {
-                deal.comments.forEach(c => {
-                    html += '<div class="comment">';
-                    html += '<span class="comment-author">' + escapeHtml(c.author) + '</span>';
-                    html += '<span class="comment-date">' + formatShortDate(c.created_at) + '</span>';
-                    html += '<div class="comment-text">' + escapeHtml(c.text) + '</div>';
-                    html += '</div>';
-                });
-            }
+            // Render threaded comments
+            const topLevel = (deal.comments || []).filter(c => !c.parent_id);
+            html += renderCommentTree(topLevel, deal.comments || [], deal.id, 0);
 
+            // Top-level comment form
             html += '<div class="comment-form">';
             html += '<input type="text" id="comment-author-' + deal.id + '" placeholder="Name">';
             html += '<textarea id="comment-text-' + deal.id + '" placeholder="Add a comment..."></textarea>';
-            html += '<button class="btn btn-small" onclick="addComment(' + deal.id + ')">Post</button>';
+            html += '<button class="btn btn-small" onclick="addComment(' + deal.id + ', null)">Post</button>';
             html += '</div>';
 
             html += '</div></div>';
