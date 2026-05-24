@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magellan</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        /* ── Login Screen ── */
+        .login-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .login-box {
+            text-align: center;
+            max-width: 360px;
+            width: 100%;
+            padding: 20px;
+        }
+        .login-box h1 {
+            font-size: 28px;
+            font-weight: normal;
+            letter-spacing: 8px;
+            margin: 0 0 30px 0;
+        }
+        .login-box input {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 14px;
+            padding: 10px 14px;
+            border: 1px solid #ccc;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .login-box input:focus {
+            outline: none;
+            border-color: #2e5e4e;
+        }
+        .login-box button {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 14px;
+            padding: 10px 30px;
+            background: #2e5e4e;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            letter-spacing: 2px;
+        }
+        .login-box button:hover {
+            background: #3a6b5a;
+        }
+        .login-error {
+            color: #a33;
+            font-size: 13px;
+            margin-top: 10px;
+            min-height: 20px;
+        }
+
+        /* ── Portal ── */
+        .portal {
+            display: none;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        .portal-header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .portal-header h1 {
+            font-size: 28px;
+            font-weight: normal;
+            letter-spacing: 8px;
+            margin: 0;
+        }
+        .portal-nav {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        .portal-nav a {
+            color: #2e5e4e;
+            margin: 0 8px;
+            cursor: pointer;
+        }
+        hr {
+            border: none;
+            border-top: 2px solid #2e5e4e;
+            margin: 15px 0;
+        }
+
+        /* ── Add Deal Form ── */
+        .add-deal-toggle {
+            text-align: center;
+            padding: 15px 0;
+        }
+        .add-deal-toggle a {
+            color: #2e5e4e;
+            cursor: pointer;
+            font-size: 15px;
+            text-decoration: underline;
+        }
+        .add-deal-form {
+            display: none;
+            padding: 15px 0;
+        }
+        .add-deal-form h3 {
+            font-size: 16px;
+            font-weight: normal;
+            margin: 0 0 15px 0;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 4px;
+        }
+        .form-group input,
+        .form-group textarea {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 14px;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2e5e4e;
+        }
+        .form-actions {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .btn {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 13px;
+            padding: 8px 24px;
+            background: #2e5e4e;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            letter-spacing: 1px;
+            margin: 0 5px;
+        }
+        .btn:hover {
+            background: #3a6b5a;
+        }
+        .btn-outline {
+            background: #fff;
+            color: #2e5e4e;
+            border: 1px solid #2e5e4e;
+        }
+        .btn-outline:hover {
+            background: #f5f5f5;
+        }
+        .btn-small {
+            font-size: 12px;
+            padding: 5px 14px;
+        }
+        .btn-danger {
+            background: #a33;
+        }
+        .btn-danger:hover {
+            background: #c44;
+        }
+
+        /* ── Deal Cards ── */
+        .deals-list {
+            padding: 10px 0;
+        }
+        .deal-card {
+            border: 1px solid #ddd;
+            padding: 18px;
+            margin-bottom: 15px;
+        }
+        .deal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        .deal-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .deal-status {
+            font-size: 11px;
+            padding: 3px 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border: 1px solid;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .status-new {
+            color: #2e5e4e;
+            border-color: #2e5e4e;
+            background: #eef5f2;
+        }
+        .status-seen {
+            color: #777;
+            border-color: #bbb;
+            background: #f5f5f5;
+        }
+        .deal-description {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .deal-links {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        .deal-links a {
+            color: #2e5e4e;
+            margin-right: 15px;
+        }
+        .deal-founders {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 12px;
+        }
+        .deal-founders strong {
+            font-weight: normal;
+            color: #000;
+        }
+        .deal-date {
+            font-size: 11px;
+            color: #999;
+        }
+        .deal-actions {
+            text-align: right;
+            margin-top: 8px;
+        }
+
+        /* ── Comments ── */
+        .comments-section {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+        }
+        .comments-toggle {
+            font-size: 13px;
+            color: #2e5e4e;
+            cursor: pointer;
+            text-decoration: underline;
+            background: none;
+            border: none;
+            font-family: 'Times New Roman', Times, serif;
+            padding: 0;
+        }
+        .comments-body {
+            display: none;
+            margin-top: 10px;
+        }
+        .comment {
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+        }
+        .comment:last-of-type {
+            border-bottom: none;
+        }
+        .comment-author {
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .comment-date {
+            font-size: 11px;
+            color: #999;
+            margin-left: 8px;
+        }
+        .comment-text {
+            margin-top: 4px;
+            line-height: 1.5;
+            color: #333;
+        }
+        .comment-form {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .comment-form input[type="text"] {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 13px;
+            padding: 6px 8px;
+            border: 1px solid #ccc;
+            width: 120px;
+        }
+        .comment-form textarea {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 13px;
+            padding: 6px 8px;
+            border: 1px solid #ccc;
+            flex: 1;
+            height: 36px;
+            resize: none;
+        }
+        .comment-form input:focus,
+        .comment-form textarea:focus {
+            outline: none;
+            border-color: #2e5e4e;
+        }
+        .no-deals {
+            text-align: center;
+            color: #999;
+            padding: 40px 0;
+            font-size: 14px;
+        }
+        .loading {
+            text-align: center;
+            color: #999;
+            padding: 40px 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Login Overlay ── -->
+<div class="login-overlay" id="loginOverlay">
+    <div class="login-box">
+        <h1>MAGELLAN</h1>
+        <hr>
+        <input type="email" id="emailInput" placeholder="Email">
+        <input type="password" id="passwordInput" placeholder="Password">
+        <br>
+        <button onclick="attemptLogin()">ENTER</button>
+        <div class="login-error" id="loginError"></div>
+    </div>
+</div>
+
+<!-- ── Portal ── -->
+<div class="portal" id="portal">
+    <div class="portal-header">
+        <h1>MAGELLAN</h1>
+        <div class="portal-nav">
+            <a href="index.html">Home</a>
+            <a onclick="logout()">Log Out</a>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- Add Deal Toggle -->
+    <div class="add-deal-toggle" id="addDealToggle">
+        <a onclick="toggleAddForm()">+ Submit New Deal</a>
+    </div>
+
+    <!-- Add Deal Form -->
+    <div class="add-deal-form" id="addDealForm">
+        <h3>Submit a New Deal</h3>
+        <div class="form-group">
+            <label>Company Name *</label>
+            <input type="text" id="dealName">
+        </div>
+        <div class="form-group">
+            <label>Company Website</label>
+            <input type="text" id="dealWebsite" placeholder="https://...">
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="dealDescription" placeholder="What does the company do?"></textarea>
+        </div>
+        <div class="form-group">
+            <label>Founders (names, separated by commas)</label>
+            <input type="text" id="dealFounders">
+        </div>
+        <div class="form-group">
+            <label>Founder LinkedIn(s)</label>
+            <input type="text" id="dealLinkedins" placeholder="URLs separated by commas">
+        </div>
+        <div class="form-group">
+            <label>Founder Website / Other Links</label>
+            <input type="text" id="dealOtherLinks" placeholder="URLs separated by commas">
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-outline" onclick="toggleAddForm()">Cancel</button>
+            <button class="btn" onclick="submitDeal()">Submit</button>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- Deals List -->
+    <div class="deals-list" id="dealsList">
+        <div class="loading">Loading...</div>
+    </div>
+
+    <hr>
+
+    <div style="text-align:center; font-size:12px; color:#999;">
+        <p>Copyright &copy; 2026 <b>Magellan</b></p>
+    </div>
+</div>
+
+<script>
+    // ── Supabase Client ──
+    const SUPABASE_URL = 'https://kubesclsvkhygfltvywy.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_60vLl1aJo1TckrEQKWEfuQ_YqYtafjW';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ── Auth ──
+    async function attemptLogin() {
+        const email = document.getElementById('emailInput').value.trim();
+        const password = document.getElementById('passwordInput').value;
+        const errorEl = document.getElementById('loginError');
+
+        if (!email || !password) {
+            errorEl.textContent = 'Please enter email and password.';
+            return;
+        }
+
+        errorEl.textContent = 'Signing in...';
+
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+
+        if (error) {
+            errorEl.textContent = 'Incorrect email or password.';
+        } else {
+            showPortal();
+        }
+    }
+
+    async function logout() {
+        await supabase.auth.signOut();
+        document.getElementById('portal').style.display = 'none';
+        document.getElementById('loginOverlay').style.display = 'flex';
+        document.getElementById('passwordInput').value = '';
+        document.getElementById('emailInput').value = '';
+        document.getElementById('loginError').textContent = '';
+    }
+
+    function showPortal() {
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('portal').style.display = 'block';
+        loadDeals();
+    }
+
+    // Check existing session on load
+    async function checkSession() {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            showPortal();
+        }
+    }
+    checkSession();
+
+    // Enter key to login
+    document.getElementById('passwordInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') attemptLogin();
+    });
+    document.getElementById('emailInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') document.getElementById('passwordInput').focus();
+    });
+
+    // ── Deals ──
+    let dealsCache = [];
+
+    async function loadDeals() {
+        const { data: deals, error } = await supabase
+            .from('deals')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error loading deals:', error);
+            document.getElementById('dealsList').innerHTML = '<div class="no-deals">Error loading deals.</div>';
+            return;
+        }
+
+        // Load comments for all deals
+        const { data: comments } = await supabase
+            .from('comments')
+            .select('*')
+            .order('created_at', { ascending: true });
+
+        // Attach comments to deals
+        dealsCache = deals.map(deal => ({
+            ...deal,
+            comments: (comments || []).filter(c => c.deal_id === deal.id)
+        }));
+
+        renderDeals();
+    }
+
+    function toggleAddForm() {
+        const form = document.getElementById('addDealForm');
+        const toggle = document.getElementById('addDealToggle');
+        if (form.style.display === 'block') {
+            form.style.display = 'none';
+            toggle.style.display = 'block';
+        } else {
+            form.style.display = 'block';
+            toggle.style.display = 'none';
+        }
+    }
+
+    async function submitDeal() {
+        const name = document.getElementById('dealName').value.trim();
+        if (!name) { alert('Company name is required.'); return; }
+
+        const deal = {
+            name: name,
+            website: document.getElementById('dealWebsite').value.trim() || null,
+            description: document.getElementById('dealDescription').value.trim() || null,
+            founders: document.getElementById('dealFounders').value.trim() || null,
+            linkedins: document.getElementById('dealLinkedins').value.trim() || null,
+            other_links: document.getElementById('dealOtherLinks').value.trim() || null,
+            status: 'new'
+        };
+
+        const { error } = await supabase.from('deals').insert([deal]);
+
+        if (error) {
+            alert('Error submitting deal. Please try again.');
+            console.error(error);
+            return;
+        }
+
+        // Clear form
+        document.getElementById('dealName').value = '';
+        document.getElementById('dealWebsite').value = '';
+        document.getElementById('dealDescription').value = '';
+        document.getElementById('dealFounders').value = '';
+        document.getElementById('dealLinkedins').value = '';
+        document.getElementById('dealOtherLinks').value = '';
+
+        toggleAddForm();
+        await loadDeals();
+    }
+
+    async function toggleStatus(dealId) {
+        const deal = dealsCache.find(d => d.id === dealId);
+        if (!deal) return;
+        const newStatus = deal.status === 'new' ? 'seen' : 'new';
+
+        const { error } = await supabase
+            .from('deals')
+            .update({ status: newStatus })
+            .eq('id', dealId);
+
+        if (!error) {
+            deal.status = newStatus;
+            renderDeals();
+        }
+    }
+
+    async function deleteDeal(dealId) {
+        if (!confirm('Remove this deal?')) return;
+
+        const { error } = await supabase
+            .from('deals')
+            .delete()
+            .eq('id', dealId);
+
+        if (!error) {
+            await loadDeals();
+        }
+    }
+
+    function toggleComments(dealId) {
+        const el = document.getElementById('comments-' + dealId);
+        el.style.display = el.style.display === 'block' ? 'none' : 'block';
+    }
+
+    async function addComment(dealId) {
+        const authorEl = document.getElementById('comment-author-' + dealId);
+        const textEl = document.getElementById('comment-text-' + dealId);
+        const author = authorEl.value.trim() || 'Anonymous';
+        const text = textEl.value.trim();
+        if (!text) return;
+
+        const { error } = await supabase
+            .from('comments')
+            .insert([{ deal_id: dealId, author: author, text: text }]);
+
+        if (!error) {
+            authorEl.value = '';
+            textEl.value = '';
+            await loadDeals();
+            // Re-open comments
+            setTimeout(() => {
+                const el = document.getElementById('comments-' + dealId);
+                if (el) el.style.display = 'block';
+            }, 100);
+        }
+    }
+
+    function formatUrl(url) {
+        if (!url) return '';
+        if (!url.startsWith('http')) url = 'https://' + url;
+        return url;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function formatDate(dateStr) {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    function formatShortDate(dateStr) {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function renderDeals() {
+        const container = document.getElementById('dealsList');
+
+        if (dealsCache.length === 0) {
+            container.innerHTML = '<div class="no-deals">No deals yet. Submit one above.</div>';
+            return;
+        }
+
+        let html = '';
+        dealsCache.forEach(deal => {
+            const statusClass = deal.status === 'new' ? 'status-new' : 'status-seen';
+            const statusLabel = deal.status === 'new' ? 'New' : 'Reviewed';
+            const commentCount = deal.comments ? deal.comments.length : 0;
+
+            html += '<div class="deal-card">';
+            html += '<div class="deal-header">';
+            html += '<h3 class="deal-name">' + escapeHtml(deal.name) + '</h3>';
+            html += '<span class="deal-status ' + statusClass + '" onclick="toggleStatus(' + deal.id + ')" title="Click to toggle">' + statusLabel + '</span>';
+            html += '</div>';
+
+            if (deal.description) {
+                html += '<div class="deal-description">' + escapeHtml(deal.description) + '</div>';
+            }
+
+            let linksHtml = '';
+            if (deal.website) {
+                linksHtml += '<a href="' + formatUrl(deal.website) + '" target="_blank">Website</a>';
+            }
+            if (deal.linkedins) {
+                deal.linkedins.split(',').forEach((li, i) => {
+                    li = li.trim();
+                    if (li) linksHtml += '<a href="' + formatUrl(li) + '" target="_blank">LinkedIn' + (deal.linkedins.split(',').length > 1 ? ' ' + (i + 1) : '') + '</a>';
+                });
+            }
+            if (deal.other_links) {
+                deal.other_links.split(',').forEach((link, i) => {
+                    link = link.trim();
+                    if (link) linksHtml += '<a href="' + formatUrl(link) + '" target="_blank">Link ' + (i + 1) + '</a>';
+                });
+            }
+            if (linksHtml) {
+                html += '<div class="deal-links">' + linksHtml + '</div>';
+            }
+
+            if (deal.founders) {
+                html += '<div class="deal-founders"><strong>Founders:</strong> ' + escapeHtml(deal.founders) + '</div>';
+            }
+
+            html += '<div class="deal-date">Added ' + formatDate(deal.created_at) + '</div>';
+
+            html += '<div class="deal-actions">';
+            html += '<button class="btn btn-small btn-danger" onclick="deleteDeal(' + deal.id + ')">Remove</button>';
+            html += '</div>';
+
+            // Comments
+            html += '<div class="comments-section">';
+            html += '<button class="comments-toggle" onclick="toggleComments(' + deal.id + ')">Comments (' + commentCount + ')</button>';
+            html += '<div class="comments-body" id="comments-' + deal.id + '">';
+
+            if (deal.comments && deal.comments.length > 0) {
+                deal.comments.forEach(c => {
+                    html += '<div class="comment">';
+                    html += '<span class="comment-author">' + escapeHtml(c.author) + '</span>';
+                    html += '<span class="comment-date">' + formatShortDate(c.created_at) + '</span>';
+                    html += '<div class="comment-text">' + escapeHtml(c.text) + '</div>';
+                    html += '</div>';
+                });
+            }
+
+            html += '<div class="comment-form">';
+            html += '<input type="text" id="comment-author-' + deal.id + '" placeholder="Name">';
+            html += '<textarea id="comment-text-' + deal.id + '" placeholder="Add a comment..."></textarea>';
+            html += '<button class="btn btn-small" onclick="addComment(' + deal.id + ')">Post</button>';
+            html += '</div>';
+
+            html += '</div></div>';
+            html += '</div>';
+        });
+
+        container.innerHTML = html;
+    }
+</script>
+
+</body>
+</html>
