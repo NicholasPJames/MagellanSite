@@ -86,7 +86,7 @@
 
         function setIcon(on) {
             btn.innerHTML = on ? ICONS.soundOn : ICONS.soundOff;
-            var label = on ? 'Mute ambient music' : 'Play ambient music';
+            var label = on ? 'Sound off' : 'Sound on';
             btn.setAttribute('aria-label', label);
             btn.title = label;
         }
@@ -160,7 +160,7 @@
             applyTheme(currentTheme() === 'dark' ? 'light' : 'dark', themeBtn);
         });
 
-        var audioBtn = makeButton('audioControl', 'Play ambient music');
+        var audioBtn = makeButton('audioControl', 'Sound off');
         setupAudio(audioBtn);
 
         document.body.appendChild(audioBtn);
