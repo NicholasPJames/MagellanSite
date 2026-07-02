@@ -8,6 +8,8 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>(function(){try{var t=localStorage.getItem('magellan-theme');if(!t){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+    <link rel="stylesheet" href="theme.css">
     <style>
         html, body {
             height: 100%;
@@ -15,15 +17,15 @@
         }
         body {
             font-family: 'Times New Roman', Times, serif;
-            background-color: #ffffff;
-            color: #000000;
+            background-color: var(--bg);
+            color: var(--text);
         }
 
         /* ── Login Screen ── */
         .login-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: #ffffff;
+            background: var(--bg);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -45,7 +47,9 @@
             font-family: 'Times New Roman', Times, serif;
             font-size: 14px;
             padding: 10px 14px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--input-border);
+            background: var(--surface);
+            color: var(--text);
             width: 100%;
             box-sizing: border-box;
             margin-bottom: 12px;
@@ -53,23 +57,23 @@
         }
         .login-box input:focus {
             outline: none;
-            border-color: #2e5e4e;
+            border-color: var(--accent);
         }
         .login-box button {
             font-family: 'Times New Roman', Times, serif;
             font-size: 14px;
             padding: 10px 30px;
-            background: #2e5e4e;
-            color: #fff;
+            background: var(--accent);
+            color: var(--on-accent);
             border: none;
             cursor: pointer;
             letter-spacing: 2px;
         }
         .login-box button:hover {
-            background: #3a6b5a;
+            background: var(--accent-hover);
         }
         .login-error {
-            color: #a33;
+            color: var(--error);
             font-size: 13px;
             margin-top: 10px;
             min-height: 20px;
@@ -98,26 +102,19 @@
             margin-top: 8px;
         }
         .portal-nav a {
-            color: #2e5e4e;
+            color: var(--accent);
             margin: 0 8px;
             cursor: pointer;
         }
-        hr {
-            border: none;
-            border-top: 2px solid #2e5e4e;
-            margin: 15px 0;
-        }
-
         /* ── Add Deal Form ── */
         .add-deal-toggle {
             text-align: center;
             padding: 15px 0;
         }
         .add-deal-toggle a {
-            color: #2e5e4e;
+            color: var(--accent);
             cursor: pointer;
             font-size: 15px;
-            text-decoration: underline;
         }
         .add-deal-form {
             display: none;
@@ -135,7 +132,7 @@
         .form-group label {
             display: block;
             font-size: 13px;
-            color: #555;
+            color: var(--text-muted);
             margin-bottom: 4px;
         }
         .form-group input,
@@ -143,7 +140,9 @@
             font-family: 'Times New Roman', Times, serif;
             font-size: 14px;
             padding: 8px 10px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--input-border);
+            background: var(--surface);
+            color: var(--text);
             width: 100%;
             box-sizing: border-box;
         }
@@ -154,7 +153,7 @@
         .form-group input:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #2e5e4e;
+            border-color: var(--accent);
         }
         .form-actions {
             text-align: center;
@@ -164,33 +163,34 @@
             font-family: 'Times New Roman', Times, serif;
             font-size: 13px;
             padding: 8px 24px;
-            background: #2e5e4e;
-            color: #fff;
+            background: var(--accent);
+            color: var(--on-accent);
             border: none;
             cursor: pointer;
             letter-spacing: 1px;
             margin: 0 5px;
         }
         .btn:hover {
-            background: #3a6b5a;
+            background: var(--accent-hover);
         }
         .btn-outline {
-            background: #fff;
-            color: #2e5e4e;
-            border: 1px solid #2e5e4e;
+            background: var(--surface);
+            color: var(--accent);
+            border: 1px solid var(--accent);
         }
         .btn-outline:hover {
-            background: #f5f5f5;
+            background: var(--btn-outline-hover);
         }
         .btn-small {
             font-size: 12px;
             padding: 5px 14px;
         }
         .btn-danger {
-            background: #a33;
+            background: var(--error);
+            color: #ffffff;
         }
         .btn-danger:hover {
-            background: #c44;
+            opacity: 0.85;
         }
 
         /* ── Deal Cards ── */
@@ -198,7 +198,8 @@
             padding: 10px 0;
         }
         .deal-card {
-            border: 1px solid #ddd;
+            border: 1px solid var(--border);
+            background: var(--surface);
             padding: 18px;
             margin-bottom: 15px;
         }
@@ -223,42 +224,42 @@
             cursor: pointer;
         }
         .status-new {
-            color: #2e5e4e;
-            border-color: #2e5e4e;
-            background: #eef5f2;
+            color: var(--accent);
+            border-color: var(--accent);
+            background: var(--accent-soft-bg);
         }
         .status-seen {
-            color: #777;
-            border-color: #bbb;
-            background: #f5f5f5;
+            color: var(--status-seen-text);
+            border-color: var(--status-seen-border);
+            background: var(--status-seen-bg);
         }
         .deal-description {
             font-size: 14px;
             line-height: 1.6;
-            color: #333;
+            color: var(--text-muted);
             margin-bottom: 10px;
         }
         .deal-links {
             font-size: 13px;
-            color: #555;
+            color: var(--text-muted);
             margin-bottom: 10px;
         }
         .deal-links a {
-            color: #2e5e4e;
+            color: var(--accent);
             margin-right: 15px;
         }
         .deal-founders {
             font-size: 13px;
-            color: #555;
+            color: var(--text-muted);
             margin-bottom: 12px;
         }
         .deal-founders strong {
             font-weight: normal;
-            color: #000;
+            color: var(--text);
         }
         .deal-date {
             font-size: 11px;
-            color: #999;
+            color: var(--text-faint);
         }
         .deal-actions {
             text-align: right;
@@ -269,13 +270,12 @@
         .comments-section {
             margin-top: 12px;
             padding-top: 12px;
-            border-top: 1px solid #eee;
+            border-top: 1px solid var(--border-soft);
         }
         .comments-toggle {
             font-size: 13px;
-            color: #2e5e4e;
+            color: var(--accent);
             cursor: pointer;
-            text-decoration: underline;
             background: none;
             border: none;
             font-family: 'Times New Roman', Times, serif;
@@ -287,7 +287,7 @@
         }
         .comment {
             padding: 8px 0;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid var(--border-fainter);
             font-size: 13px;
         }
         .comment:last-of-type {
@@ -299,13 +299,13 @@
         }
         .comment-date {
             font-size: 11px;
-            color: #999;
+            color: var(--text-faint);
             margin-left: 8px;
         }
         .comment-text {
             margin-top: 4px;
             line-height: 1.5;
-            color: #333;
+            color: var(--text-muted);
         }
         .comment-form {
             display: flex;
@@ -316,14 +316,18 @@
             font-family: 'Times New Roman', Times, serif;
             font-size: 13px;
             padding: 6px 8px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--input-border);
+            background: var(--surface);
+            color: var(--text);
             width: 120px;
         }
         .comment-form textarea {
             font-family: 'Times New Roman', Times, serif;
             font-size: 13px;
             padding: 6px 8px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--input-border);
+            background: var(--surface);
+            color: var(--text);
             flex: 1;
             height: 36px;
             resize: none;
@@ -331,17 +335,16 @@
         .comment-form input:focus,
         .comment-form textarea:focus {
             outline: none;
-            border-color: #2e5e4e;
+            border-color: var(--accent);
         }
         .reply-btn {
             font-family: 'Times New Roman', Times, serif;
             font-size: 11px;
-            color: #2e5e4e;
+            color: var(--accent);
             background: none;
             border: none;
             cursor: pointer;
             padding: 2px 0;
-            text-decoration: underline;
         }
         .reply-form {
             margin-top: 6px;
@@ -349,25 +352,25 @@
         }
         .no-deals {
             text-align: center;
-            color: #999;
+            color: var(--text-faint);
             padding: 40px 0;
             font-size: 14px;
         }
         .loading {
             text-align: center;
-            color: #999;
+            color: var(--text-faint);
             padding: 40px 0;
             font-size: 14px;
         }
     </style>
+    <script src="site.js" defer></script>
 </head>
 <body>
 
 <!-- ── Login Overlay ── -->
 <div class="login-overlay" id="loginOverlay">
     <div class="login-box">
-        <a href="index.html" style="text-decoration:none; color:#000000;"><h1>MAGELLAN</h1></a>
-        <hr>
+        <a href="index.html" style="text-decoration:none; color:var(--text);"><h1>MAGELLAN</h1></a>
         <input type="password" id="passwordInput" placeholder="Password" autofocus>
         <br>
         <button onclick="attemptLogin()">ENTER</button>
@@ -379,13 +382,11 @@
 <div class="portal" id="portal">
     <div class="portal-header">
         <h1>MAGELLAN</h1>
-        <div class="subtitle" style="font-size:13px; color:#666; margin-top:4px; letter-spacing:2px;">PARTNERS</div>
+        <div class="subtitle" style="font-size:13px; color:var(--text-muted); margin-top:4px; letter-spacing:2px;">PARTNERS</div>
         <div class="portal-nav">
             <a onclick="logout()">Log Out</a>
         </div>
     </div>
-
-    <hr>
 
     <!-- Add Deal Toggle -->
     <div class="add-deal-toggle" id="addDealToggle">
@@ -425,16 +426,12 @@
         </div>
     </div>
 
-    <hr>
-
     <!-- Deals List -->
     <div class="deals-list" id="dealsList">
         <div class="loading">Loading...</div>
     </div>
 
-    <hr>
-
-    <div style="text-align:center; font-size:12px; color:#999;">
+    <div style="text-align:center; font-size:12px; color:var(--text-faint);">
         <p>Copyright &copy; 2026 <b>Magellan</b></p>
     </div>
 </div>

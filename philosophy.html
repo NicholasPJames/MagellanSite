@@ -7,6 +7,8 @@
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <script>(function(){try{var t=localStorage.getItem('magellan-theme');if(!t){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+    <link rel="stylesheet" href="theme.css">
     <style>
         html, body {
             height: 100%;
@@ -14,8 +16,8 @@
         }
         body {
             font-family: 'Times New Roman', Times, serif;
-            background-color: #ffffff;
-            color: #000000;
+            background-color: var(--bg);
+            color: var(--text);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -37,17 +39,12 @@
         }
         .header a {
             text-decoration: none;
-            color: #000000;
+            color: var(--text);
         }
         .header img {
             width: 160px;
             margin-bottom: 10px;
             border: none;
-        }
-        hr {
-            border: none;
-            border-top: 2px solid #2e5e4e;
-            margin: 15px 0;
         }
         .content {
             padding: 20px 0;
@@ -62,7 +59,7 @@
             margin-bottom: 15px;
         }
         a {
-            color: #2e5e4e;
+            color: var(--accent);
         }
         .footer {
             text-align: center;
@@ -73,6 +70,7 @@
             margin: 4px 0;
         }
     </style>
+    <script src="site.js" defer></script>
 </head>
 <body>
 
@@ -82,14 +80,11 @@
     <a href="index.html"><h1>MAGELLAN</h1></a>
 </div>
 
-<hr>
-
 <div class="content">
     <h2>Our Philosophy</h2>
-    <p>At Magellan, we have a simple belief: companies are social before they are economic. Critically understanding the people building them — how they think, what they've endured, who they trust, what they dream for — is the foundation of conviction. We aim to be crew on the long voyage of building a legendary company.</p>
+    <p>At Magellan, we have a simple belief: companies are social before they are economic. Critically understanding the people building them is the foundation of conviction: how they think, what they've endured, who they trust, and what they dream for. We aim to be crew on the long voyage of building a legendary company.</p>
+    <p>We are small by design, but our commitment is not. To the people we choose to work with, we hold ourselves to being exhaustingly helpful in the hopes of bringing immediate change and growth to businesses.</p>
 </div>
-
-<hr>
 
 <div class="footer">
     <p>Copyright &copy; 2026 <b>Magellan</b></p>

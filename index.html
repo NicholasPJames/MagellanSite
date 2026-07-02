@@ -12,6 +12,8 @@
     <meta property="og:image" content="https://magellanholdings.co/og-image.png">
     <meta property="og:type" content="website">
     <meta name="description" content="Magellan - Venture Capital">
+    <script>(function(){try{var t=localStorage.getItem('magellan-theme');if(!t){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+    <link rel="stylesheet" href="theme.css">
     <style>
         html, body {
             height: 100%;
@@ -19,8 +21,8 @@
         }
         body {
             font-family: 'Times New Roman', Times, serif;
-            background-color: #ffffff;
-            color: #000000;
+            background-color: var(--bg);
+            color: var(--text);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -49,21 +51,16 @@
             letter-spacing: 8px;
             margin: 0;
         }
-        hr {
-            border: none;
-            border-top: 2px solid #2e5e4e;
-            margin: 15px 0;
-        }
         .links {
             text-align: center;
             padding: 20px 0;
             font-size: 15px;
         }
         .links a {
-            color: #2e5e4e;
+            color: var(--accent);
         }
         .links a:visited {
-            color: #3a6b5a;
+            color: var(--accent-hover);
         }
         .footer {
             text-align: center;
@@ -71,12 +68,13 @@
             margin-top: 10px;
         }
         .footer a {
-            color: #2e5e4e;
+            color: var(--accent);
         }
         .footer p {
             margin: 4px 0;
         }
     </style>
+    <script src="site.js" defer></script>
 </head>
 <body>
 
@@ -86,14 +84,10 @@
     <h1>MAGELLAN</h1>
 </div>
 
-<hr>
-
 <div class="links">
     <p><a href="philosophy.html">Our Philosophy</a></p>
     <p style="margin-top: 15px;"><a href="lp.html">Login</a></p>
 </div>
-
-<hr>
 
 <div class="footer">
     <p>Copyright &copy; 2026 <b>Magellan</b></p>
