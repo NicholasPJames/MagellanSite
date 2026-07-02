@@ -7,6 +7,7 @@
 
     var THEME_KEY = 'magellan-theme';
     var AUDIO_KEY = 'magellan-audio';
+    var POS_KEY = 'magellan-audio-pos';
 
     // ── Icons ──
     var ICONS = {
@@ -45,7 +46,36 @@
     function setupAudio(btn) {
         var audio = new Audio('music/ambient.mp3');
         audio.loop = true;
-        audio.preload = 'none';
+        // Preload so the track is cached and starts instantly, with no
+        // download delay on the first click or on resume.
+        audio.preload = 'auto';
+
+        // Remember how far into the track we are, so the next page can pick
+        // up where this one left off instead of restarting from zero.
+        var savedPos = 0;
+        try { savedPos = parseFloat(localStorage.getItem(POS_KEY)) || 0; } catch (e) {}
+
+        function savePos() {
+            try { localStorage.setItem(POS_KEY, String(audio.currentTime)); } catch (e) {}
+        }
+
+        // currentTime can only be set once the track length is known.
+        audio.addEventListener('loadedmetadata', function () {
+            if (savedPos > 0 && isFinite(audio.duration) && savedPos < audio.duration) {
+                try { audio.currentTime = savedPos; } catch (e) {}
+            }
+        });
+
+        var lastWrite = 0;
+        audio.addEventListener('timeupdate', function () {
+            var now = Date.now();
+            if (now - lastWrite > 1000) { lastWrite = now; savePos(); }
+        });
+        // Capture the position right before the page unloads / is hidden.
+        window.addEventListener('pagehide', savePos);
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) savePos();
+        });
 
         function setIcon(on) {
             btn.innerHTML = on ? ICONS.soundOn : ICONS.soundOff;
@@ -57,25 +87,40 @@
         audio.addEventListener('play', function () { setIcon(true); });
         audio.addEventListener('pause', function () { setIcon(false); });
 
+        function start() {
+            return audio.play().then(function () {
+                try { localStorage.setItem(AUDIO_KEY, 'on'); } catch (e) {}
+            });
+        }
+
         btn.addEventListener('click', function () {
             if (audio.paused) {
-                audio.play().catch(function () { setIcon(false); });
-                try { localStorage.setItem(AUDIO_KEY, 'on'); } catch (e) {}
+                start().catch(function () { setIcon(false); });
             } else {
                 audio.pause();
+                savePos();
                 try { localStorage.setItem(AUDIO_KEY, 'off'); } catch (e) {}
             }
         });
 
         setIcon(false);
 
-        // If music was on when the visitor left the last page, try to resume.
-        // Browsers may block this until the first interaction; the icon stays
-        // in "off" state until playback actually starts.
+        // If music was playing when the visitor left the last page, resume it.
+        // Browsers block auto-play on a fresh page until the visitor interacts,
+        // so if the immediate attempt is blocked we retry on the first click or
+        // keypress — making playback feel continuous across pages.
         var pref;
         try { pref = localStorage.getItem(AUDIO_KEY); } catch (e) {}
         if (pref === 'on') {
-            audio.play().catch(function () {});
+            start().catch(function () {
+                var resumeOnce = function () {
+                    start().catch(function () {});
+                    document.removeEventListener('pointerdown', resumeOnce);
+                    document.removeEventListener('keydown', resumeOnce);
+                };
+                document.addEventListener('pointerdown', resumeOnce);
+                document.addEventListener('keydown', resumeOnce);
+            });
         }
     }
 
