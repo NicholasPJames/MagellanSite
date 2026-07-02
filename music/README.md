@@ -1,11 +1,27 @@
 # Ambient music
 
-The audio button on the site plays the file **`ambient.mp3`** in this folder, on loop.
+The audio button plays **`ambient.m4a`** on loop (wired up in `../site.js`,
+and preloaded via a `<link rel="preload">` in `../index.html`).
 
-To set it up: drop a royalty-free ambient track here and name it exactly `ambient.mp3`.
+## Files here
 
-Until that file exists, the sound button will simply do nothing when clicked
-(the browser can't load a missing file). No errors are shown to visitors.
+| File | Size | What it is |
+|------|------|------------|
+| `ambient.m4a`   | ~2.1 MB | **In use.** 64 kbps AAC — re-encoded for fast first-load. |
+| `ambient-48.m4a`| ~1.5 MB | Smaller 48 kbps alternative, if you want even faster loading. |
+| `ambient.mp3`   | ~4.3 MB | Original 128 kbps upload, kept as a backup. |
 
-To use a different filename or format, update the path in `../site.js`
-(look for `new Audio('music/ambient.mp3')`).
+The smaller files were made from the original with macOS's built-in tool:
+
+```
+afconvert -f m4af -d aac -b 64000 ambient.mp3 ambient.m4a     # 64 kbps
+afconvert -f m4af -d aac -b 48000 ambient.mp3 ambient-48.m4a  # 48 kbps
+```
+
+## Swapping the track
+
+To use a different file, update the name in `../site.js`
+(`new Audio('music/ambient.m4a')`) and the preload line in `../index.html`.
+Keep the file small (a couple of MB or less) so first-time visitors don't
+wait for a large download before the music starts. Repeat visits are always
+instant because the browser caches it.

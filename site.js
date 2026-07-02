@@ -51,7 +51,7 @@
 
     // ── Audio ──
     function setupAudio(btn) {
-        var audio = new Audio('music/ambient.mp3');
+        var audio = new Audio('music/ambient.m4a');
         audio.loop = true;
         // Preload so the track is cached and starts instantly, with no
         // download delay on the first click or on resume.
