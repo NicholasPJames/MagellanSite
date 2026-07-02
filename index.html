@@ -20,80 +20,81 @@
             margin: 0;
         }
         body {
-            font-family: 'Times New Roman', Times, serif;
             background-color: var(--bg);
-            color: var(--text);
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
-        .wrapper {
-            max-width: 800px;
+        /* The persistent shell: this frame holds the pages so navigating
+           between them never reloads the outer document (or the audio). */
+        #viewFrame {
+            position: fixed;
+            inset: 0;
             width: 100%;
-            padding: 20px;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        .header img {
-            width: 160px;
-            margin-bottom: 10px;
-            border: none;
-            outline: none;
-        }
-        .header img[alt]:after {
-            display: none;
-        }
-        .header h1 {
-            font-size: 28px;
-            font-weight: normal;
-            letter-spacing: 8px;
-            margin: 0;
-        }
-        .links {
-            text-align: center;
-            padding: 20px 0;
-            font-size: 15px;
-        }
-        .links a {
-            color: var(--accent);
-        }
-        .links a:visited {
-            color: var(--accent-hover);
-        }
-        .footer {
-            text-align: center;
-            font-size: 12px;
-            margin-top: 10px;
-        }
-        .footer a {
-            color: var(--accent);
-        }
-        .footer p {
-            margin: 4px 0;
+            height: 100%;
+            border: 0;
+            display: block;
         }
     </style>
     <script src="site.js" defer></script>
 </head>
 <body>
 
-<div class="wrapper">
+<iframe id="viewFrame" title="Magellan"></iframe>
 
-<div class="header">
-    <h1>MAGELLAN</h1>
-</div>
+<script>
+(function () {
+    var frame = document.getElementById('viewFrame');
 
-<div class="links">
-    <p><a href="philosophy.html">Our Philosophy</a></p>
-    <p style="margin-top: 15px;"><a href="lp.html">Login</a></p>
-</div>
+    // Friendly hash names <-> actual page files.
+    var routeToFile = { '': 'home.html', 'home': 'home.html', 'philosophy': 'philosophy.html', 'login': 'lp.html' };
+    var fileToRoute = { 'home.html': 'home', 'philosophy.html': 'philosophy', 'lp.html': 'login' };
 
-<div class="footer">
-    <p>Copyright &copy; 2026 <b>Magellan</b></p>
-</div>
+    function fileFromHash() {
+        var h = location.hash.replace(/^#\/?/, '');
+        if (routeToFile.hasOwnProperty(h)) return routeToFile[h];
+        if (/\.html$/.test(h)) return h;              // allow direct #philosophy.html
+        return 'home.html';
+    }
 
-</div>
+    function currentFile() {
+        try {
+            var p = frame.contentWindow.location.pathname;
+            return p.substring(p.lastIndexOf('/') + 1) || 'home.html';
+        } catch (e) {
+            return null;                              // not yet loaded
+        }
+    }
+
+    // Keep the outer URL and title in step with whatever the frame shows.
+    frame.addEventListener('load', function () {
+        var f = currentFile();
+        if (!f) return;
+        var route = fileToRoute[f] || f;
+        var desired = '#' + route;
+        if (location.hash !== desired) {
+            history.replaceState(null, '', desired);
+        }
+        try {
+            if (frame.contentDocument && frame.contentDocument.title) {
+                document.title = frame.contentDocument.title;
+            }
+        } catch (e) {}
+        // Make sure a freshly loaded page adopts the current theme, even if
+        // localStorage was unavailable (e.g. opened via file://).
+        try {
+            frame.contentWindow.postMessage(
+                { type: 'magellan-theme', theme: document.documentElement.getAttribute('data-theme') }, '*');
+        } catch (e) {}
+    });
+
+    // Back/forward or a manually edited hash swaps the frame's page.
+    window.addEventListener('hashchange', function () {
+        var want = fileFromHash();
+        if (currentFile() !== want) frame.src = want;
+    });
+
+    // Initial page.
+    frame.src = fileFromHash();
+})();
+</script>
 
 </body>
 </html>

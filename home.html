@@ -3,10 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magellan - Our Philosophy</title>
+    <title>Magellan</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <meta property="og:title" content="Magellan">
+    <meta property="og:description" content="Venture Capital">
+    <meta property="og:image" content="https://magellanholdings.co/og-image.png">
+    <meta property="og:type" content="website">
+    <meta name="description" content="Magellan - Venture Capital">
     <script>(function(){try{var t=localStorage.getItem('magellan-theme');if(!t){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
     <link rel="stylesheet" href="theme.css">
     <style>
@@ -31,40 +36,39 @@
             text-align: center;
             margin-bottom: 10px;
         }
+        .header img {
+            width: 160px;
+            margin-bottom: 10px;
+            border: none;
+            outline: none;
+        }
+        .header img[alt]:after {
+            display: none;
+        }
         .header h1 {
             font-size: 28px;
             font-weight: normal;
             letter-spacing: 8px;
             margin: 0;
         }
-        .header a {
-            text-decoration: none;
-            color: var(--text);
-        }
-        .header img {
-            width: 160px;
-            margin-bottom: 10px;
-            border: none;
-        }
-        .content {
+        .links {
+            text-align: center;
             padding: 20px 0;
             font-size: 15px;
-            line-height: 1.8;
         }
-        .content h2 {
-            font-size: 18px;
-            margin-bottom: 15px;
-        }
-        .content p {
-            margin-bottom: 15px;
-        }
-        a {
+        .links a {
             color: var(--accent);
+        }
+        .links a:visited {
+            color: var(--accent-hover);
         }
         .footer {
             text-align: center;
             font-size: 12px;
             margin-top: 10px;
+        }
+        .footer a {
+            color: var(--accent);
         }
         .footer p {
             margin: 4px 0;
@@ -77,13 +81,12 @@
 <div class="wrapper">
 
 <div class="header">
-    <a href="home.html"><h1>MAGELLAN</h1></a>
+    <h1>MAGELLAN</h1>
 </div>
 
-<div class="content">
-    <h2>Our Philosophy</h2>
-    <p>At Magellan, we have a simple belief: companies are social before they are economic. Critically understanding the people building them is the foundation of conviction. It's about how people think, what they've endured, who they trust, and what they dream about. We aim to be crew on the long voyage of building a legendary company.</p>
-    <p>We are small by design, but our commitment is not. To the people we choose to work with, we hold ourselves to being exhaustingly helpful in the hopes of bringing immediate change and growth to businesses.</p>
+<div class="links">
+    <p><a href="philosophy.html">Our Philosophy</a></p>
+    <p style="margin-top: 15px;"><a href="lp.html">Login</a></p>
 </div>
 
 <div class="footer">

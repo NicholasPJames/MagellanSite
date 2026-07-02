@@ -35,6 +35,13 @@
     function applyTheme(theme, btn) {
         document.documentElement.setAttribute('data-theme', theme);
         try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
+        // Push the change straight into the framed page. This works over
+        // http/https AND file://, unlike storage events which don't fire
+        // for local files.
+        var frame = document.getElementById('viewFrame');
+        if (frame && frame.contentWindow) {
+            try { frame.contentWindow.postMessage({ type: 'magellan-theme', theme: theme }, '*'); } catch (e) {}
+        }
         // Show the icon of the mode you'd switch TO.
         btn.innerHTML = theme === 'dark' ? ICONS.sun : ICONS.moon;
         var label = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
@@ -125,6 +132,28 @@
     }
 
     function init() {
+        // Keep every same-origin document (the shell and the framed pages) in
+        // sync when the theme changes in another one.
+        window.addEventListener('storage', function (e) {
+            if (e.key === THEME_KEY && e.newValue) {
+                document.documentElement.setAttribute('data-theme', e.newValue);
+            }
+        });
+
+        // The shell pushes theme changes to the framed page this way (works
+        // even under file://, where storage events don't fire).
+        window.addEventListener('message', function (e) {
+            var d = e.data;
+            if (d && d.type === 'magellan-theme' && (d.theme === 'dark' || d.theme === 'light')) {
+                document.documentElement.setAttribute('data-theme', d.theme);
+            }
+        });
+
+        // Inside the iframe shell, the outer frame owns the controls and the
+        // audio (so it plays continuously across page changes). The framed
+        // pages just render content and follow the theme.
+        if (window.self !== window.top) return;
+
         var themeBtn = makeButton('themeControl', 'Toggle color theme');
         applyTheme(currentTheme(), themeBtn);
         themeBtn.addEventListener('click', function () {
