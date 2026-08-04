@@ -19,13 +19,13 @@
             background-color: var(--bg);
             color: var(--text);
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
         }
         .wrapper {
             max-width: 800px;
             width: 100%;
-            padding: 20px;
+            padding: 38vh 20px 20px;
         }
         .header {
             text-align: center;
@@ -62,12 +62,15 @@
             color: var(--accent);
         }
         .footer {
+            position: fixed;
+            bottom: 30px;
+            left: 0;
+            right: 0;
             text-align: center;
             font-size: 12px;
-            margin-top: 10px;
         }
         .footer p {
-            margin: 4px 0;
+            margin: 0;
         }
     </style>
     <script src="site.js" defer></script>
@@ -81,7 +84,7 @@
 </div>
 
 <div class="content">
-<p>At Magellan, we have a simple belief: companies are social before they are economic.</p>
+<p style="text-align: center;">At Magellan, we have a simple belief: companies are social before they are economic.</p>
 </div>
 
 <div class="footer">
