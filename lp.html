@@ -602,58 +602,118 @@
         el.style.display = el.style.display === 'block' ? 'none' : 'block';
     }
 
-    async function addComment(dealId, parentId) {
-        const suffix = parentId ? parentId : dealId;
-        const authorEl = document.getElementById('comment-author-' + suffix);
-        const textEl = document.getElementById('comment-text-' + suffix);
+    // Tracks which comment each deal's form is currently replying to (null = top-level)
+    const replyTarget = {};
+    // Tracks which comment is currently being edited, per deal
+    const editTarget = {};
+
+    async function addComment(dealId) {
+        const authorEl = document.getElementById('comment-author-' + dealId);
+        const textEl = document.getElementById('comment-text-' + dealId);
         const author = authorEl.value.trim() || 'Anonymous';
         const text = textEl.value.trim();
         if (!text) return;
 
         const row = { deal_id: dealId, author: author, text: text };
-        if (parentId) row.parent_id = parentId;
+        if (replyTarget[dealId]) row.parent_id = replyTarget[dealId];
 
-        const { error } = await sb
-            .from('comments')
-            .insert([row]);
+        const { error } = await sb.from('comments').insert([row]);
 
         if (!error) {
             authorEl.value = '';
             textEl.value = '';
-            await loadDeals();
-            // Re-open comments
-            setTimeout(() => {
-                const el = document.getElementById('comments-' + dealId);
-                if (el) el.style.display = 'block';
-            }, 100);
+            replyTarget[dealId] = null;
+            await reloadKeepingOpen(dealId);
         }
     }
 
-    function toggleReplyForm(commentId) {
-        const el = document.getElementById('reply-form-' + commentId);
-        el.style.display = el.style.display === 'block' ? 'none' : 'block';
+    function setReplyTarget(dealId, commentId) {
+        replyTarget[dealId] = commentId;
+        editTarget[dealId] = null;
+        renderDeals();
+        keepOpen(dealId);
+        const textEl = document.getElementById('comment-text-' + dealId);
+        if (textEl) textEl.focus();
+    }
+
+    function cancelReply(dealId) {
+        replyTarget[dealId] = null;
+        renderDeals();
+        keepOpen(dealId);
+    }
+
+    function startEdit(dealId, commentId) {
+        editTarget[dealId] = commentId;
+        replyTarget[dealId] = null;
+        renderDeals();
+        keepOpen(dealId);
+        const el = document.getElementById('edit-text-' + commentId);
+        if (el) el.focus();
+    }
+
+    function cancelEdit(dealId) {
+        editTarget[dealId] = null;
+        renderDeals();
+        keepOpen(dealId);
+    }
+
+    async function saveEdit(dealId, commentId) {
+        const textEl = document.getElementById('edit-text-' + commentId);
+        const text = textEl.value.trim();
+        if (!text) return;
+
+        const { error } = await sb
+            .from('comments')
+            .update({ text: text, edited_at: new Date().toISOString() })
+            .eq('id', commentId);
+
+        if (!error) {
+            editTarget[dealId] = null;
+            await reloadKeepingOpen(dealId);
+        }
+    }
+
+    function keepOpen(dealId) {
+        const el = document.getElementById('comments-' + dealId);
+        if (el) el.style.display = 'block';
+    }
+
+    async function reloadKeepingOpen(dealId) {
+        await loadDeals();
+        keepOpen(dealId);
     }
 
     function renderCommentTree(comments, allComments, dealId, depth) {
         let html = '';
         comments.forEach(c => {
             const indent = depth * 20;
+            const isEditing = editTarget[dealId] === c.id;
+            const isReplyTarget = replyTarget[dealId] === c.id;
+
             html += '<div class="comment" style="margin-left:' + indent + 'px;">';
             html += '<span class="comment-author">' + escapeHtml(c.author) + '</span>';
-            html += '<span class="comment-date">' + formatShortDate(c.created_at) + '</span>';
-            html += '<div class="comment-text">' + escapeHtml(c.text) + '</div>';
-            html += '<button class="reply-btn" onclick="toggleReplyForm(' + c.id + ')">Reply</button>';
+            html += '<span class="comment-date">' + formatShortDate(c.created_at);
+            if (c.edited_at) {
+                html += ' &middot; edited ' + formatShortDate(c.edited_at);
+            }
+            html += '</span>';
 
-            // Reply form (hidden by default)
-            html += '<div class="reply-form" id="reply-form-' + c.id + '" style="display:none;">';
-            html += '<div class="comment-form">';
-            html += '<input type="text" id="comment-author-' + c.id + '" placeholder="Name">';
-            html += '<textarea id="comment-text-' + c.id + '" placeholder="Reply..."></textarea>';
-            html += '<button class="btn btn-small" onclick="addComment(' + dealId + ', ' + c.id + ')">Post</button>';
-            html += '</div>';
-            html += '</div>';
+            if (isEditing) {
+                html += '<div class="comment-form" style="margin-top:6px;">';
+                html += '<textarea id="edit-text-' + c.id + '">' + escapeHtml(c.text) + '</textarea>';
+                html += '<button class="btn btn-small" onclick="saveEdit(' + dealId + ', ' + c.id + ')">Save</button>';
+                html += '<button class="btn btn-small btn-outline" onclick="cancelEdit(' + dealId + ')">Cancel</button>';
+                html += '</div>';
+            } else {
+                html += '<div class="comment-text">' + escapeHtml(c.text) + '</div>';
+                if (isReplyTarget) {
+                    html += '<button class="reply-btn" onclick="cancelReply(' + dealId + ')">Cancel reply</button>';
+                } else {
+                    html += '<button class="reply-btn" onclick="setReplyTarget(' + dealId + ', ' + c.id + ')">Reply</button>';
+                }
+                html += '<button class="reply-btn" style="margin-left:10px;" onclick="startEdit(' + dealId + ', ' + c.id + ')">Edit</button>';
+            }
 
-            // Render children
             const children = allComments.filter(ch => ch.parent_id === c.id);
             if (children.length > 0) {
                 html += renderCommentTree(children, allComments, dealId, depth + 1);
@@ -745,11 +805,16 @@
             const topLevel = (deal.comments || []).filter(c => !c.parent_id);
             html += renderCommentTree(topLevel, deal.comments || [], deal.id, 0);
 
-            // Top-level comment form
+            // Single shared form — retargets to a comment when replying
+            const target = replyTarget[deal.id];
+            if (target) {
+                const parent = (deal.comments || []).find(c => c.id === target);
+                html += '<div style="font-size:11px; color:var(--text-faint); margin-top:10px;">Replying to ' + escapeHtml(parent ? parent.author : 'comment') + '</div>';
+            }
             html += '<div class="comment-form">';
             html += '<input type="text" id="comment-author-' + deal.id + '" placeholder="Name">';
-            html += '<textarea id="comment-text-' + deal.id + '" placeholder="Add a comment..."></textarea>';
-            html += '<button class="btn btn-small" onclick="addComment(' + deal.id + ', null)">Post</button>';
+            html += '<textarea id="comment-text-' + deal.id + '" placeholder="' + (target ? 'Reply...' : 'Add a comment...') + '"></textarea>';
+            html += '<button class="btn btn-small" onclick="addComment(' + deal.id + ')">Post</button>';
             html += '</div>';
 
             html += '</div></div>';
