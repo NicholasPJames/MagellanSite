@@ -48,12 +48,14 @@ html, body{
     height: 100%;
     margin: 0;
     overflow: hidden;               /* one page — nothing to scroll to */
+    overscroll-behavior: none;      /* no pull-to-refresh over the paint */
 }
 
 body{
     font-family: var(--serif);
     color: var(--ink);
     background: var(--ground);
+    -webkit-tap-highlight-color: transparent;
 }
 
 a{ color: var(--ink-soft); text-decoration: none; }
@@ -69,6 +71,9 @@ a:focus-visible{ outline: 1px solid var(--ink-soft); outline-offset: 5px; }
     overflow: hidden;
     background: var(--ground);
     cursor: crosshair;
+    /* A finger drag smudges — it must never scroll, zoom, or trigger
+       pull-to-refresh instead. */
+    touch-action: none;
     /* Revealed finished — the visitor arrives to a painting. */
     opacity: 0;
     transition: opacity 1.5s ease;
@@ -134,8 +139,8 @@ a:focus-visible{ outline: 1px solid var(--ink-soft); outline-offset: 5px; }
 /* The single line of copy, typed out in the corner — the one flat,
    mechanical thing on a page of wet paint. */
 #corner{
-    left: var(--gutter);
-    bottom: clamp(22px, 4.4vh, 44px);
+    left: max(var(--gutter), env(safe-area-inset-left));
+    bottom: calc(clamp(22px, 4.4vh, 44px) + env(safe-area-inset-bottom));
     max-width: min(33ch, 78vw);
     transform: translateY(10px);
 }
@@ -152,8 +157,8 @@ a:focus-visible{ outline: 1px solid var(--ink-soft); outline-offset: 5px; }
 
 /* Login, tucked in the opposite corner. */
 #login{
-    right: var(--gutter);
-    top: clamp(20px, 4vh, 38px);
+    right: max(var(--gutter), env(safe-area-inset-right));
+    top: calc(clamp(20px, 4vh, 38px) + env(safe-area-inset-top));
     transform: translateY(-8px);
 }
 #login a{
@@ -289,7 +294,8 @@ var lctx  = load.getContext('2d');
 var loaded = false;
 var maskGrad = null, maskFor = -1;
 
-var BRUSH = 30;                                  /* CSS px radius */
+var coarse = window.matchMedia('(pointer: coarse)').matches;
+var BRUSH = coarse ? 42 : 30;                    /* CSS px radius — wider under a finger */
 
 /* Firm in the middle, feathering to nothing at the rim, so dabs overlap
    without leaving a hard disc edge but still deposit solid pigment. */
@@ -305,7 +311,7 @@ function bristleMask(d) {
     return maskGrad;
 }
 
-var smudged = false, healTicks = 0;
+var smudged = false, lastDab = 0, lastFrameT = 0;
 
 function brushSize() {
     var rd = Math.max(4, Math.round(BRUSH * dpr));
@@ -373,7 +379,7 @@ function smudgeDab(cssX, cssY, dirX, dirY, deposit, pickup) {
     lctx.globalAlpha = 1;
 
     smudged = true;
-    healTicks = 0;
+    lastDab = performance.now();
 }
 
 /* Walk the pointer's path in small steps so the smear is continuous
@@ -451,7 +457,6 @@ function present() {
     ctx.clearRect(0, 0, W, H);
     ctx.drawImage(base, 0, 0, W, H);
     smudged = false;
-    healTicks = 0;
     hasLast = false;
     loaded = false;
     phase = 'live';
@@ -476,24 +481,30 @@ window.addEventListener('resize', function () {
     }, 260);
 });
 
-function frame() {
+function frame(t) {
     if (!reduceMotion && phase === 'live' && smudged) {
         /* Nothing animates on its own. This runs only after the paint
            has been pushed, and only once the brush has been still for a
            beat — washing the original back over the canvas *while* it
-           is worked is what makes a smudge read as varnish. Then the
-           paint creeps back over about ten seconds, lands exactly true,
-           and stops drawing entirely. */
-        healTicks++;
-        if (healTicks > 26) {
-            var heal = 0.012;
-            if (healTicks > 560) { heal = 1; smudged = false; }
+           is worked is what makes a smudge read as varnish.
+
+           Timing is wall-clock, not frame-count: phones and background
+           tabs throttle requestAnimationFrame, and a frame-counted heal
+           there stalls just short of the original for minutes. On the
+           clock it creeps back over ~10s and snaps exactly true at
+           10.4s no matter the frame rate, then stops drawing. */
+        var since = t - lastDab;
+        if (since > 430) {
+            var dt = Math.min(100, t - (lastFrameT || t));
+            var heal = Math.min(1, dt * 0.00072);
+            if (since > 10400) { heal = 1; smudged = false; }
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             ctx.globalAlpha = heal;
             ctx.drawImage(base, 0, 0, W, H);
             ctx.globalAlpha = 1;
         }
     }
+    lastFrameT = t;
     requestAnimationFrame(frame);
 }
 
