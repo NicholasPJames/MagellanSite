@@ -1,49 +1,51 @@
-/* ── Magellan shared theme ──────────────────────────────────────────────
-   Light/dark color variables + floating audio & theme controls.
-   Included on index.html, philosophy.html and lp.html.               */
+/* ── Magellan shared theme — Cézanne ────────────────────────────────────
+   Palette drawn from Mont Sainte-Victoire with Large Pine: warm cream
+   ground, field-green accent, deep pine dark mode, olive-gold and
+   terracotta as accents. Light/dark variables + floating theme control.
+   Included on index.html and lp.html.                                  */
 
 :root,
 :root[data-theme="light"] {
-    --bg: #ffffff;
-    --surface: #ffffff;
-    --text: #000000;
-    --text-muted: #555555;
-    --text-faint: #999999;
-    --accent: #2e5e4e;
-    --accent-hover: #3a6b5a;
-    --accent-soft-bg: #eef5f2;
-    --border: #dddddd;
-    --border-soft: #eeeeee;
-    --border-fainter: #f0f0f0;
-    --input-border: #cccccc;
-    --on-accent: #ffffff;
-    --status-seen-text: #777777;
-    --status-seen-border: #bbbbbb;
-    --status-seen-bg: #f5f5f5;
-    --btn-outline-hover: #f5f5f5;
-    --error: #aa3333;
-    --control-shadow: rgba(0, 0, 0, 0.12);
+    --bg: #f5f3e9;
+    --surface: #faf8f0;
+    --text: #22281f;
+    --text-muted: #5c6353;
+    --text-faint: #969c8a;
+    --accent: #4f6b3a;
+    --accent-hover: #5f7f47;
+    --accent-soft-bg: #edf0e0;
+    --border: #d9d6c4;
+    --border-soft: #e6e3d3;
+    --border-fainter: #edeadb;
+    --input-border: #c3c0ac;
+    --on-accent: #f7f5e9;
+    --status-seen-text: #7c8270;
+    --status-seen-border: #b3b8a3;
+    --status-seen-bg: #eeeee0;
+    --btn-outline-hover: #efeddf;
+    --error: #a3492f;
+    --control-shadow: rgba(34, 40, 31, 0.14);
 }
 
 :root[data-theme="dark"] {
-    --bg: #121212;
-    --surface: #1b1b1b;
-    --text: #e8e8e8;
-    --text-muted: #b0b0b0;
-    --text-faint: #808080;
-    --accent: #6fae97;
-    --accent-hover: #8ac3ad;
-    --accent-soft-bg: #17241f;
-    --border: #333333;
-    --border-soft: #2a2a2a;
-    --border-fainter: #242424;
-    --input-border: #444444;
-    --on-accent: #10201a;
-    --status-seen-text: #999999;
-    --status-seen-border: #555555;
-    --status-seen-bg: #262626;
-    --btn-outline-hover: #262626;
-    --error: #e07a7a;
+    --bg: #131a12;
+    --surface: #1b241a;
+    --text: #e8e6d7;
+    --text-muted: #adb3a0;
+    --text-faint: #79806c;
+    --accent: #a9bf8b;
+    --accent-hover: #bcd19e;
+    --accent-soft-bg: #1e2a1a;
+    --border: #2f3829;
+    --border-soft: #262e22;
+    --border-fainter: #202820;
+    --input-border: #3e4836;
+    --on-accent: #16200f;
+    --status-seen-text: #979d8a;
+    --status-seen-border: #4f5745;
+    --status-seen-bg: #232b20;
+    --btn-outline-hover: #232b20;
+    --error: #d98e6b;
     --control-shadow: rgba(0, 0, 0, 0.6);
 }
 

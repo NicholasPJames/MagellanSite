@@ -1,102 +1,501 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magellan</title>
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
-    <meta property="og:title" content="Magellan">
-    <meta property="og:description" content="Venture Capital">
-    <meta property="og:image" content="https://magellanholdings.co/og-image.png">
-    <meta property="og:type" content="website">
-    <meta name="description" content="Magellan - Venture Capital">
-    <script>(function(){try{var t=localStorage.getItem('magellan-theme');if(!t){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
-    <link rel="stylesheet" href="theme.css">
-    <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-        }
-        body {
-            font-family: 'Times New Roman', Times, serif;
-            background-color: var(--bg);
-            color: var(--text);
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-        }
-        .wrapper {
-            max-width: 800px;
-            width: 100%;
-            padding: 38vh 20px 20px;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        .header img {
-            width: 160px;
-            margin-bottom: 10px;
-            border: none;
-            outline: none;
-        }
-        .header img[alt]:after {
-            display: none;
-        }
-        .header h1 {
-            font-size: 28px;
-            font-weight: normal;
-            letter-spacing: 8px;
-            margin: 0;
-        }
-        .links {
-            text-align: center;
-            padding: 20px 0;
-            font-size: 15px;
-        }
-        .links a {
-            color: var(--accent);
-        }
-        .links a:visited {
-            color: var(--accent-hover);
-        }
-        .footer {
-            position: fixed;
-            bottom: 30px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 12px;
-        }
-        .footer a {
-            color: var(--accent);
-        }
-        .footer p {
-            margin: 0;
-        }
-    </style>
-    <script src="site.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Magellan</title>
+<meta name="description" content="Magellan is a global investment firm, founded in 2026.">
+<meta name="theme-color" content="#182a1d">
+<meta property="og:title" content="Magellan">
+<meta property="og:description" content="Magellan is a global investment firm, founded in 2026.">
+<meta property="og:image" content="https://magellanholdings.co/og-image.png">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23182a1d'/%3E%3Cpath d='M4 24 L14 9 L20 17 L24 12 L29 24 Z' fill='%23a3b48b'/%3E%3Crect y='24' width='32' height='4' fill='%23b3a44e'/%3E%3C/svg%3E">
+<style>
+/* ─────────────────────────────────────────────────────────────
+   Magellan — one page.
+
+   The canvas shows Cézanne's Mont Sainte-Victoire with Large
+   Pine (Courtauld, c. 1887; public domain — Cézanne died 1906).
+   The painting is wet: drag and the brush hauls its pigment
+   around, then the paint settles back exactly as it was.
+
+   Nothing on the page moves on its own.
+   ───────────────────────────────────────────────────────────── */
+
+:root{
+    /* Palette sampled from the painting: deep pine, warm cream,
+       olive-gold fields, sage. */
+    --ink:       #f2efe1;
+    --ink-soft:  rgba(242, 239, 225, 0.82);
+    --ink-faint: rgba(242, 239, 225, 0.55);
+    --ground:    #182a1d;
+    --gold:      #b3a44e;
+    --serif:     'Times New Roman', Times, serif;
+    /* Utility face: a plain machine mono against the painted serif.
+       Swap the first entries for 'Courier New' if you want the softer,
+       more literal typewriter. */
+    --mono:      ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
+                 'Liberation Mono', 'Courier New', monospace;
+    --gutter:    clamp(22px, 4.2vw, 56px);
+}
+
+*{ box-sizing: border-box; }
+
+html, body{
+    height: 100%;
+    margin: 0;
+    overflow: hidden;               /* one page — nothing to scroll to */
+}
+
+body{
+    font-family: var(--serif);
+    color: var(--ink);
+    background: var(--ground);
+}
+
+a{ color: var(--ink-soft); text-decoration: none; }
+a:hover{ color: var(--ink); }
+a:focus-visible{ outline: 1px solid var(--ink-soft); outline-offset: 5px; }
+
+/* ── The painting ───────────────────────────────────────────── */
+
+#stage{
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    background: var(--ground);
+    cursor: crosshair;
+    /* Revealed finished — the visitor arrives to a painting. */
+    opacity: 0;
+    transition: opacity 1.5s ease;
+}
+.ready #stage{ opacity: 1; }
+
+#paint{
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* Just enough shade in the corners to hold the type — tinted to the
+   painting's own pine-shadow green, not a neutral black. */
+#vignette{
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background:
+        radial-gradient(58% 46% at 8% 96%,  rgba(12,22,14,0.72) 0%, rgba(12,22,14,0) 72%),
+        radial-gradient(34% 30% at 96% 4%,  rgba(12,22,14,0.55) 0%, rgba(12,22,14,0) 72%),
+        radial-gradient(52% 40% at 50% 46%, rgba(12,22,14,0.30) 0%, rgba(12,22,14,0) 78%);
+}
+
+/* ── Type ───────────────────────────────────────────────────── */
+
+.layer{
+    position: fixed;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0;
+    /* Type follows the picture in, not the other way round. */
+    transition: opacity 1.5s ease 0.7s, transform 1.5s cubic-bezier(.22,.8,.3,1) 0.7s;
+}
+.ready .layer{ opacity: 1; transform: none; }
+.layer a{ pointer-events: auto; }
+
+/* Wordmark — the only thing in the middle of the page. Nudged just
+   above true centre: a mark sitting on the mathematical middle of a
+   frame always reads slightly low. */
+#wordmark{
+    inset: 0;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    padding-bottom: 4.5vh;
+    transform: translateY(14px);
+}
+#wordmark h1{
+    margin: 0;
+    font-weight: normal;
+    font-size: clamp(30px, 7.6vw, 88px);
+    letter-spacing: 0.4em;
+    text-indent: 0.4em;                 /* offsets the trailing space */
+    text-transform: uppercase;
+    line-height: 1;
+    text-shadow: 0 2px 44px rgba(12,22,14,0.85), 0 0 90px rgba(12,22,14,0.6);
+}
+
+/* The single line of copy, typed out in the corner — the one flat,
+   mechanical thing on a page of wet paint. */
+#corner{
+    left: var(--gutter);
+    bottom: clamp(22px, 4.4vh, 44px);
+    max-width: min(33ch, 78vw);
+    transform: translateY(10px);
+}
+#corner p{
+    margin: 0;
+    font-family: var(--mono);
+    font-size: clamp(11.5px, 0.92vw, 13.5px);
+    line-height: 2;
+    letter-spacing: 0.01em;
+    text-wrap: balance;
+    color: var(--ink-soft);
+    text-shadow: 0 1px 18px rgba(12,22,14,0.95);
+}
+
+/* Login, tucked in the opposite corner. */
+#login{
+    right: var(--gutter);
+    top: clamp(20px, 4vh, 38px);
+    transform: translateY(-8px);
+}
+#login a{
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-shadow: 0 1px 16px rgba(12,22,14,0.95);
+    border-bottom: 1px solid rgba(242,239,225,0);
+    padding-bottom: 3px;
+    transition: border-color 0.35s ease, color 0.35s ease;
+}
+#login a:hover{ border-bottom-color: rgba(242,239,225,0.55); }
+
+@media (max-width: 640px){
+    #corner{ max-width: 78vw; bottom: clamp(18px, 3vh, 30px); }
+}
+
+@media (prefers-reduced-motion: reduce){
+    .layer{ transition: opacity 0.3s ease; }
+    #stage{ transition: opacity 0.3s ease; }
+}
+</style>
 </head>
 <body>
 
-<div class="wrapper">
+<div id="stage"><canvas id="paint" aria-hidden="true"></canvas></div>
+<div id="vignette" aria-hidden="true"></div>
 
-<div class="header">
-    <h1>MAGELLAN</h1>
+<div class="layer" id="wordmark"><h1>Magellan</h1></div>
+
+<div class="layer" id="corner">
+    <p>Magellan is a global investment firm, founded in 2026.</p>
 </div>
 
-<div class="links">
-    <p><a href="philosophy.html"> About </a></p>
-    <p style="margin-top: 15px;"><a href="lp.html">Login</a></p>
-</div>
+<div class="layer" id="login"><a href="lp.html">Login</a></div>
 
-<div class="footer">
-    <p>Copyright &copy; 2026 <b>Magellan</b></p>
-</div>
+<script>
+(function () {
+'use strict';
 
-</div>
+function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
 
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ═══════════════════════════════════════════════════════════════
+   1 · Canvas plumbing
+   ═══════════════════════════════════════════════════════════════ */
+
+var stage = document.getElementById('stage');
+var cv    = document.getElementById('paint');
+var ctx   = cv.getContext('2d');
+var base  = document.createElement('canvas');   /* the clean painting */
+var bctx  = base.getContext('2d');
+
+var W = 0, H = 0, dpr = 1;
+
+function sizeCanvases() {
+    W = stage.clientWidth || window.innerWidth;
+    H = stage.clientHeight || window.innerHeight;
+
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var longest = Math.max(W, H) * dpr;
+    if (longest > 2600) dpr = Math.max(1, dpr * 2600 / longest);
+
+    base.width  = Math.round(W * dpr);
+    base.height = Math.round(H * dpr);
+}
+
+/* Setting canvas.width clears it, so on a resize the visible canvas
+   keeps the old frame until the new one is ready to swap in. */
+function adoptVisibleSize() {
+    if (cv.width !== base.width || cv.height !== base.height) {
+        cv.width  = base.width;
+        cv.height = base.height;
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   2 · The painting
+   `mont-sainte-victoire.jpg` is the Courtauld scan of the original,
+   public domain (Cézanne died 1906).
+   ═══════════════════════════════════════════════════════════════ */
+
+var art = new Image();
+var artReady = false, booted = false;
+
+art.onload  = function () { artReady = true; boot(); };
+art.onerror = function () { artReady = false; boot(); };
+art.src = 'mont-sainte-victoire.jpg';
+setTimeout(function () { boot(); }, 5000);      /* never show nothing */
+
+/* The painting on a plain dark ground — it fills the frame wherever it
+   can. Where filling would mean cutting away more than about 40% of
+   the width (a portrait phone), the whole canvas is shown instead.
+   The vertical crop is anchored high, so what gets lost is foreground
+   field rather than the pine branch arching over the mountain. */
+function drawArt() {
+    var pw = base.width, ph = base.height;
+    bctx.setTransform(1, 0, 0, 1, 0, 0);
+    bctx.fillStyle = '#182a1d';
+    bctx.fillRect(0, 0, pw, ph);
+    if (!artReady) return;
+
+    var coverS   = Math.max(pw / art.width, ph / art.height);
+    var containS = Math.min(pw / art.width, ph / art.height);
+    var fit = (coverS / containS > 1.7) ? containS : coverS;
+
+    var fw = art.width * fit, fh = art.height * fit;
+    var fx = (pw - fw) / 2;
+    var fy = fh > ph ? (ph - fh) * 0.18      /* crop: keep the branch */
+                     : (ph - fh) * 0.43;     /* letterbox: sit high */
+
+    bctx.drawImage(art, fx, fy, fw, fh);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   3 · Smudging — a loaded brush in wet oil, the only motion here
+
+   A colour-smudge, not a blur. The brush carries a persistent *load*
+   of pigment: each dab lays down some of what the bristles hold, then
+   lifts some of what lies AHEAD into the load. Because the load
+   survives the whole stroke, colour picked up in one place is still
+   being deposited far beyond it — drag out of the golden fields and
+   you pull ochre into the sky, and the two genuinely mix.
+   ═══════════════════════════════════════════════════════════════ */
+
+var stamp = document.createElement('canvas');
+var sctx  = stamp.getContext('2d');
+var load  = document.createElement('canvas');   /* pigment on the bristles */
+var lctx  = load.getContext('2d');
+var loaded = false;
+var maskGrad = null, maskFor = -1;
+
+var BRUSH = 30;                                  /* CSS px radius */
+
+/* Firm in the middle, feathering to nothing at the rim, so dabs overlap
+   without leaving a hard disc edge but still deposit solid pigment. */
+function bristleMask(d) {
+    if (maskFor !== d) {
+        var g = sctx.createRadialGradient(d / 2, d / 2, 0, d / 2, d / 2, d / 2);
+        g.addColorStop(0.00, 'rgba(0,0,0,1)');
+        g.addColorStop(0.55, 'rgba(0,0,0,0.96)');
+        g.addColorStop(0.85, 'rgba(0,0,0,0.52)');
+        g.addColorStop(1.00, 'rgba(0,0,0,0)');
+        maskGrad = g; maskFor = d;
+    }
+    return maskGrad;
+}
+
+var smudged = false, healTicks = 0;
+
+function brushSize() {
+    var rd = Math.max(4, Math.round(BRUSH * dpr));
+    var d = rd * 2;
+    if (stamp.width !== d) {
+        stamp.width = stamp.height = d;
+        load.width = load.height = d;
+        maskFor = -1;
+        loaded = false;
+    }
+    return rd;
+}
+
+/* Charge the bristles from the canvas at full opacity. Everything after
+   this is a running average, so the load must start opaque or every
+   deposit would be a translucent film — varnish instead of pigment. */
+function chargeBrush(cssX, cssY) {
+    var rd = brushSize(), d = rd * 2;
+    lctx.setTransform(1, 0, 0, 1, 0, 0);
+    lctx.globalCompositeOperation = 'copy';
+    lctx.globalAlpha = 1;
+    lctx.drawImage(cv, cssX * dpr - rd, cssY * dpr - rd, d, d, 0, 0, d, d);
+    lctx.globalCompositeOperation = 'source-over';
+    loaded = true;
+}
+
+function smudgeDab(cssX, cssY, dirX, dirY, deposit, pickup) {
+    var rd = brushSize(), d = rd * 2;
+    var px = cssX * dpr, py = cssY * dpr;
+
+    if (!loaded) { chargeBrush(cssX, cssY); return; }
+
+    /* deposit — masked copy of the load, laid onto the painting */
+    sctx.setTransform(1, 0, 0, 1, 0, 0);
+    sctx.globalCompositeOperation = 'copy';
+    sctx.globalAlpha = 1;
+    sctx.drawImage(load, 0, 0);
+    sctx.globalCompositeOperation = 'destination-in';
+    sctx.fillStyle = bristleMask(d);
+    sctx.fillRect(0, 0, d, d);
+    sctx.globalCompositeOperation = 'source-over';
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalAlpha = deposit;
+    ctx.drawImage(stamp, 0, 0, d, d, px - rd, py - rd, d, d);
+    ctx.globalAlpha = 1;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    /* pickup — sampled from AHEAD of the brush, so the bristles absorb
+       paint they have not touched yet. Sampling underneath meant the
+       brush kept re-absorbing its own trail, and the load never carried
+       one colour far enough to meet another. */
+    var lx = px + dirX * rd * 1.15;
+    var ly = py + dirY * rd * 1.15;
+
+    sctx.globalCompositeOperation = 'copy';
+    sctx.drawImage(cv, lx - rd, ly - rd, d, d, 0, 0, d, d);
+    sctx.globalCompositeOperation = 'destination-in';
+    sctx.fillStyle = bristleMask(d);
+    sctx.fillRect(0, 0, d, d);
+    sctx.globalCompositeOperation = 'source-over';
+
+    lctx.globalAlpha = pickup;
+    lctx.drawImage(stamp, 0, 0);
+    lctx.globalAlpha = 1;
+
+    smudged = true;
+    healTicks = 0;
+}
+
+/* Walk the pointer's path in small steps so the smear is continuous
+   instead of a row of separate blobs. */
+function smudgeAlong(x0, y0, x1, y1) {
+    var dx = x1 - x0, dy = y1 - y0;
+    var dist = Math.hypot(dx, dy);
+    if (dist < 0.6) return;
+
+    /* A jump means a new stroke: recharge rather than dragging colour
+       across the gap from wherever the cursor used to be. */
+    if (dist > BRUSH * 4) { chargeBrush(x1, y1); return; }
+
+    var ux = dx / dist, uy = dy / dist;
+    var step = Math.max(2.5, BRUSH * 0.22);
+    var steps = Math.min(48, Math.ceil(dist / step));
+    var sx = dx / steps, sy = dy / steps;
+
+    /* How far colour travels before it blends away is roughly
+       step / pickup. At a pickup of 0.34 that was ~14px — nothing ever
+       reached a different colour. At ~0.10 it carries a few hundred,
+       which is what makes two colours actually mix. */
+    var speed = clamp(dist / 40, 0, 1);
+    var deposit = 0.42 + speed * 0.20;
+    var pickup  = 0.16 - speed * 0.09;
+
+    for (var i = 1; i <= steps; i++) {
+        smudgeDab(x0 + sx * i, y0 + sy * i, ux, uy, deposit, pickup);
+    }
+}
+
+function toCanvasPx(clientX, clientY) {
+    var r = cv.getBoundingClientRect();
+    return [(clientX - r.left) * (W / r.width),
+            (clientY - r.top) * (H / r.height)];
+}
+
+var lastX = 0, lastY = 0, hasLast = false;
+
+window.addEventListener('pointermove', function (e) {
+    if (reduceMotion || phase !== 'live') return;
+    var p = toCanvasPx(e.clientX, e.clientY);
+    if (hasLast) smudgeAlong(lastX, lastY, p[0], p[1]);
+    else chargeBrush(p[0], p[1]);
+    lastX = p[0]; lastY = p[1]; hasLast = true;
+}, { passive: true });
+
+/* A press pushes the paint outward from under the fingertip. */
+window.addEventListener('pointerdown', function (e) {
+    if (reduceMotion || phase !== 'live') return;
+    var p = toCanvasPx(e.clientX, e.clientY);
+    chargeBrush(p[0], p[1]);
+    for (var i = 0; i < 16; i++) {
+        var a = (i / 16) * Math.PI * 2;
+        smudgeDab(p[0] + Math.cos(a) * 15, p[1] + Math.sin(a) * 15,
+                  Math.cos(a), Math.sin(a), 0.42, 0.14);
+    }
+    lastX = p[0]; lastY = p[1]; hasLast = true;
+}, { passive: true });
+
+window.addEventListener('pointerleave', function () { hasLast = false; loaded = false; });
+window.addEventListener('blur', function () { hasLast = false; loaded = false; });
+
+/* ═══════════════════════════════════════════════════════════════
+   4 · Boot + heal
+   ═══════════════════════════════════════════════════════════════ */
+
+var phase = 'loading';
+
+function present() {
+    sizeCanvases();
+    drawArt();
+    adoptVisibleSize();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(base, 0, 0, W, H);
+    smudged = false;
+    healTicks = 0;
+    hasLast = false;
+    loaded = false;
+    phase = 'live';
+    document.body.classList.add('ready');
+}
+
+function boot() {
+    if (booted) return;
+    booted = true;
+    present();
+    requestAnimationFrame(frame);
+}
+
+var resizeTimer = null;
+window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+        /* Ignore the mobile URL-bar height wobble. */
+        if (Math.abs(stage.clientWidth - W) < 2 &&
+            Math.abs(stage.clientHeight - H) < 90) return;
+        present();
+    }, 260);
+});
+
+function frame() {
+    if (!reduceMotion && phase === 'live' && smudged) {
+        /* Nothing animates on its own. This runs only after the paint
+           has been pushed, and only once the brush has been still for a
+           beat — washing the original back over the canvas *while* it
+           is worked is what makes a smudge read as varnish. Then the
+           paint creeps back over about ten seconds, lands exactly true,
+           and stops drawing entirely. */
+        healTicks++;
+        if (healTicks > 26) {
+            var heal = 0.012;
+            if (healTicks > 560) { heal = 1; smudged = false; }
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.globalAlpha = heal;
+            ctx.drawImage(base, 0, 0, W, H);
+            ctx.globalAlpha = 1;
+        }
+    }
+    requestAnimationFrame(frame);
+}
+
+})();
+</script>
 </body>
 </html>
