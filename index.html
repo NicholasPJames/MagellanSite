@@ -252,11 +252,12 @@ art.onerror = function () { artReady = false; boot(); };
 art.src = 'mont-sainte-victoire.jpg';
 setTimeout(function () { boot(); }, 5000);      /* never show nothing */
 
-/* The painting on a plain dark ground — it fills the frame wherever it
-   can. Where filling would mean cutting away more than about 40% of
-   the width (a portrait phone), the whole canvas is shown instead.
-   The vertical crop is anchored high, so what gets lost is foreground
-   field rather than the pine branch arching over the mountain. */
+/* Cover-fit on every screen, the way it reads on desktop: the painting
+   fills the whole viewport and the aspect ratio the frame can't hold is
+   cropped, rather than the picture floating in a letterbox. On a tall
+   phone this crops the far sides — the anchor keeps the mountain
+   centred and leans a touch left so the pine trunk survives, and it
+   sits high so the crop takes foreground field, not the arching branch. */
 function drawArt() {
     var pw = base.width, ph = base.height;
     bctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -264,14 +265,10 @@ function drawArt() {
     bctx.fillRect(0, 0, pw, ph);
     if (!artReady) return;
 
-    var coverS   = Math.max(pw / art.width, ph / art.height);
-    var containS = Math.min(pw / art.width, ph / art.height);
-    var fit = (coverS / containS > 1.7) ? containS : coverS;
-
+    var fit = Math.max(pw / art.width, ph / art.height);
     var fw = art.width * fit, fh = art.height * fit;
-    var fx = (pw - fw) / 2;
-    var fy = fh > ph ? (ph - fh) * 0.18      /* crop: keep the branch */
-                     : (ph - fh) * 0.43;     /* letterbox: sit high */
+    var fx = (pw - fw) * 0.42;
+    var fy = (ph - fh) * 0.35;
 
     bctx.drawImage(art, fx, fy, fw, fh);
 }
@@ -451,6 +448,12 @@ var phase = 'loading';
 
 function present() {
     sizeCanvases();
+    /* If the layout hasn't given us a size yet (image can load before
+       first paint), retry next frame rather than drawing a 0×0 canvas. */
+    if (base.width < 1 || base.height < 1) {
+        requestAnimationFrame(present);
+        return;
+    }
     drawArt();
     adoptVisibleSize();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
